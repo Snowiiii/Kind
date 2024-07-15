@@ -47,7 +47,7 @@ pub struct NodeIntLit {
 }
 
 impl NodeIntLit {
-    pub fn parse(tokens: &mut Peekable<Iter<Token>>) -> Result<Self, String> {
+    pub fn parse(tokens: &mut Peekable<Iter<Token>>, vars: &Vec<NodeVar>) -> Result<Self, String> {
         if let Some(token) = tokens.next() {
             match token.token_type {
                 TokenType::INTLIT => {
@@ -55,6 +55,24 @@ impl NodeIntLit {
                     Ok(NodeIntLit {
                         value: token.value.clone().expect("Failed to get value from Token"),
                     })
+                }
+                TokenType::UNKNOWN => {
+                    let name = token.value.clone().unwrap();
+                    for var in vars {
+                        if name == var.name {
+                            if var.expr.expr_type == ExpressionType::INT {
+                                return Ok(Self {
+                                    value: var.expr.value.clone(),
+                                });
+                            } else {
+                                return Err(format!(
+                                    "Expected Int variable found: {:?}",
+                                    var.expr.expr_type
+                                ));
+                            }
+                        }
+                    }
+                    Err(String::from("Invalid Unknown expression"))
                 }
                 _ => Err(String::from("Invalid expression: expected integer literal")),
             }
@@ -69,6 +87,15 @@ impl NodeIntLit {
 #[derive(Clone)]
 pub struct NodeExpr {
     pub value: String,
+    pub expr_type: ExpressionType,
+}
+
+#[derive(Clone, PartialEq, Debug)]
+pub enum ExpressionType {
+    BOOLEAN,
+    INT,
+    FLOAT,
+    STRING,
 }
 
 impl NodeExpr {
@@ -80,10 +107,12 @@ impl NodeExpr {
                     // let value = token.value.as_ref().unwrap().parse::<i32>().unwrap();
                     Ok(NodeExpr {
                         value: token.value.clone().expect("Failed to get value from Token"),
+                        expr_type: ExpressionType::INT,
                     })
                 }
                 TokenType::BOOLEAN => Ok(NodeExpr {
                     value: token.value.clone().expect("Failed to get value from Token"),
+                    expr_type: ExpressionType::BOOLEAN,
                 }),
                 TokenType::UNKNOWN => {
                     let name = token.value.clone().unwrap();
@@ -105,14 +134,21 @@ impl NodeExpr {
 }
 
 pub struct NodeExit {
-    pub expr: NodeExpr,
+    pub expr: NodeIntLit,
 }
 
 impl NodeExit {
     pub fn parse(tokens: &mut Peekable<Iter<Token>>, vars: &Vec<NodeVar>) -> Result<Self, String> {
-        Ok(NodeExit {
-            expr: NodeExpr::parse(tokens, vars).expect("Failed to get exit expr"),
-        })
+        let token = tokens.peek().unwrap();
+        let expr = if token.token_type == TokenType::SEMICOLON {
+            // User can pass in error code, when not we are using 0
+            NodeIntLit {
+                value: String::from("0"),
+            }
+        } else {
+            NodeIntLit::parse(tokens, vars)?
+        };
+        Ok(NodeExit { expr })
     }
 }
 
