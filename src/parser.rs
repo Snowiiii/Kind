@@ -18,7 +18,7 @@ impl NodeVar {
         if let Some(token) = tokens.next() {
             if token.token_type == TokenType::UNKNOWN {
                 // name = save <name>
-                let name = token.value.clone().unwrap();
+                let name = token.value.clone();
                 if let Some(token) = tokens.next() {
                     if token.token_type == TokenType::EQUAL {
                         // equal = save <name> =
@@ -53,11 +53,11 @@ impl NodeIntLit {
                 TokenType::INTLIT => {
                     // let value = token.value.as_ref().unwrap().parse::<i32>().unwrap();
                     Ok(NodeIntLit {
-                        value: token.value.clone().expect("Failed to get value from Token"),
+                        value: token.value.clone(),
                     })
                 }
                 TokenType::UNKNOWN => {
-                    let name = token.value.clone().unwrap();
+                    let name = token.value.clone();
                     for var in vars {
                         if name == var.name {
                             if var.expr.expr_type == ExpressionType::INT {
@@ -66,15 +66,18 @@ impl NodeIntLit {
                                 });
                             } else {
                                 return Err(format!(
-                                    "Expected Int variable found: {:?}",
-                                    var.expr.expr_type
+                                    "Expected Int variable found: {:?} {}",
+                                    var.expr.expr_type, token
                                 ));
                             }
                         }
                     }
-                    Err(String::from("Invalid Unknown expression"))
+                    Err(format!("{}, Invalid Unknown expression", token))
                 }
-                _ => Err(String::from("Invalid expression: expected integer literal")),
+                _ => Err(format!(
+                    "{}, Invalid expression: expected integer literal",
+                    token
+                )),
             }
         } else {
             Err(String::from(
@@ -101,29 +104,28 @@ pub enum ExpressionType {
 impl NodeExpr {
     pub fn parse(tokens: &mut Peekable<Iter<Token>>, vars: &Vec<NodeVar>) -> Result<Self, String> {
         if let Some(token) = tokens.next() {
-            dbg!(token);
             match token.token_type {
                 TokenType::INTLIT => {
                     // let value = token.value.as_ref().unwrap().parse::<i32>().unwrap();
                     Ok(NodeExpr {
-                        value: token.value.clone().expect("Failed to get value from Token"),
+                        value: token.value.clone(),
                         expr_type: ExpressionType::INT,
                     })
                 }
                 TokenType::BOOLEAN => Ok(NodeExpr {
-                    value: token.value.clone().expect("Failed to get value from Token"),
+                    value: token.value.clone(),
                     expr_type: ExpressionType::BOOLEAN,
                 }),
                 TokenType::UNKNOWN => {
-                    let name = token.value.clone().unwrap();
+                    let name = token.value.clone();
                     for var in vars {
                         if name == var.name {
                             return Ok(var.expr.clone());
                         }
                     }
-                    Err(String::from("Invalid Unknown expression"))
+                    Err(format!("{}, Invalid Unknown expression", token))
                 }
-                _ => Err(String::from("Invalid expression")),
+                _ => Err(format!("{}, Invalid expression", token)),
             }
         } else {
             Err(String::from(
