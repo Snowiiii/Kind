@@ -1,23 +1,19 @@
 use std::path::PathBuf;
 
-use crate::token::{CharLocationInfo, Token};
+use crate::token::{CharLocationInfo, DataType, Token};
 
 pub fn read_file(file: PathBuf) -> Vec<Token> {
     let path = file.display().to_string();
     let content = std::fs::read_to_string(file).expect("Failed to read file");
     let mut final_vec = Vec::new();
     for (line_number, line) in content.lines().enumerate() {
-        final_vec.append(&mut tokennize_line(
-            line.to_owned(),
-            line_number,
-            path.clone(),
-        ))
+        final_vec.append(&mut tokennize_line(line.to_owned(), line_number, &path))
     }
     final_vec
 }
 
 // We tokennize line by line so we can do better error handling/better compiler errors
-pub fn tokennize_line(string: String, line_number: usize, file: String) -> Vec<Token> {
+pub fn tokennize_line(string: String, line_number: usize, file: &String) -> Vec<Token> {
     let mut tokens = Vec::new();
     let mut chars = string.chars().peekable();
 
@@ -88,13 +84,13 @@ pub fn parse_token(string: &str, char_info: CharLocationInfo) -> Token {
         };
     } else if string == "true" {
         return Token {
-            token_type: crate::token::TokenType::BOOLEAN,
+            token_type: crate::token::TokenType::DATATYPE(DataType::BOOLEAN),
             value: "true".to_string(),
             char_info,
         };
     } else if string == "false" {
         return Token {
-            token_type: crate::token::TokenType::BOOLEAN,
+            token_type: crate::token::TokenType::DATATYPE(DataType::BOOLEAN),
             value: "false".to_string(),
             char_info,
         };

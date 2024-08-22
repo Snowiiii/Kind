@@ -104,7 +104,8 @@ pub enum ExpressionType {
 impl NodeExpr {
     pub fn parse(tokens: &mut Peekable<Iter<Token>>, vars: &Vec<NodeVar>) -> Result<Self, String> {
         if let Some(token) = tokens.next() {
-            match token.token_type {
+            let token_type = &token.token_type;
+            match token_type {
                 TokenType::INTLIT => {
                     // let value = token.value.as_ref().unwrap().parse::<i32>().unwrap();
                     Ok(NodeExpr {
@@ -112,7 +113,7 @@ impl NodeExpr {
                         expr_type: ExpressionType::INT,
                     })
                 }
-                TokenType::BOOLEAN => Ok(NodeExpr {
+                TokenType::DATATYPE(v) => Ok(NodeExpr {
                     value: token.value.clone(),
                     expr_type: ExpressionType::BOOLEAN,
                 }),
@@ -160,7 +161,8 @@ pub fn parse_tokens(tokens: Vec<Token>) -> Result<Vec<Node>, String> {
     let mut nodes = Vec::new();
 
     while let Some(token) = tokens.next() {
-        match token.token_type {
+        let token_type = &token.token_type;
+        match token_type {
             TokenType::RETURN => todo!(), // Handle return statement (optional)
             TokenType::EXIT => match NodeExit::parse(&mut tokens, &vars) {
                 Ok(exit_node) => nodes.push(Node::Exit(exit_node)),
@@ -169,7 +171,7 @@ pub fn parse_tokens(tokens: Vec<Token>) -> Result<Vec<Node>, String> {
             TokenType::INTLIT => todo!(), // Handle integer literals outside of exit (optional)
             TokenType::SEMICOLON => {}    // Currently ignored, consider handling semicolons
             TokenType::UNKNOWN => return Err(String::from("Encountered invalid token")),
-            TokenType::BOOLEAN => todo!(),
+            TokenType::DATATYPE(d) => todo!(),
             TokenType::VARIABLE => match NodeVar::parse(&mut tokens, &vars) {
                 Ok(var_node) => {
                     vars.push(var_node);

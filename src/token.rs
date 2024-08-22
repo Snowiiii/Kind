@@ -5,13 +5,21 @@ pub enum TokenType {
     RETURN,
     EXIT,
     INTLIT,
-    BOOLEAN,
     VARIABLE,
+    DATATYPE(DataType),
     EQUAL,
     ADD,
     REMOVE,
     SEMICOLON,
     UNKNOWN,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum DataType {
+    U32,
+    U16,
+    U8,
+    BOOLEAN,
 }
 
 pub struct Token {

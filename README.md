@@ -1,5 +1,7 @@
 ### Kind Compiler
 Kind is a small compiler project I wrote for fun to explore compiler construction concepts. It's currently written in Rust and focuses on the core functionalities of a compiler.
+> [!NOTE]
+> Kinds currently only Support's linux syscall's
 ## Grammar
 
 ```
